@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Input & Data Santri TDK - PP Al-Aqsha</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <header class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20">
+                    <i data-lucide="book-open-check" class="w-7 h-7 text-emerald-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg sm:text-xl tracking-tight leading-tight">SINTAK TDK</h1>
+                    <p class="text-xs text-emerald-200 font-light">Sistem Input & Pencarian Data Santri TDK - SMP & SMA Plus Al-Aqsha</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="toggleBackendGuideModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/60 hover:bg-emerald-900/90 text-emerald-100 rounded-lg text-xs font-medium border border-emerald-500/30 transition-all shadow-sm">
+                    <i data-lucide="code-2" class="w-4 h-4 text-emerald-300"></i>
+                    <span>Kode Google Apps Script</span>
+                </button>
+                <div id="connectionStatusBadge" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 text-amber-200 rounded-lg text-xs font-medium border border-amber-400/30">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="connectionStatusText">Spreadsheet: Mode Lokal / Demo</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        <!-- Config Info Bar -->
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-emerald-50 text-emerald-700 rounded-lg shrink-0 mt-0.5">
+                    <i data-lucide="link-2" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-800">Status Koneksi Google Sheets</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        URL Web App diset manual di variabel <code class="bg-slate-100 text-emerald-700 px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200">GOOGLE_SHEET_WEB_APP_URL</code> di dalam file HTML.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="fetchSheetData()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors border border-slate-300">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>Sinkronkan Data</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid Layout (Input Side + Search Side) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- ========================================== -->
+            <!-- SECTION 1: MENU INPUT SANTRI TDK (LG: 5 cols) -->
+            <!-- ========================================== -->
+            <section class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
+                            <i data-lucide="user-plus" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-base">Input Santri TDK</h2>
+                            <p class="text-xs text-slate-400">Plotting Santri ke Ustadz & Kelas TDK</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full">Form Utama</span>
+                </div>
+
+                <form id="formInputTDK" onsubmit="handleFormSubmit(event)" class="p-4 sm:p-6 space-y-4">
+                    
+                    <!-- Pilih Kelas TDK -->
+                    <div>
+                        <label for="inputKelasTDK" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Kelas TDK <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="book-open" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="inputKelasTDK" onchange="autoFillUstadz(this.value)" required
+                                class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all appearance-none">
+                                <option value="" disabled selected>-- Pilih Kelas TDK --</option>
+                                <option value="Kelas TDK Putri 1">Kelas TDK Putri 1</option>
+                                <option value="Kelas TDK Putri 2">Kelas TDK Putri 2</option>
+                                <option value="Kelas TDK Putri 3">Kelas TDK Putri 3</option>
+                                <option value="Kelas TDK Putra 1">Kelas TDK Putra 1</option>
+                                <option value="Kelas TDK Putra 2">Kelas TDK Putra 2</option>
+                                <option value="Kelas TDK Putra 3">Kelas TDK Putra 3</option>
+                                <option value="Kelas TDK SMA Putra Putri">Kelas TDK SMA Putra Putri</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Nama Ustadz / Ustadzah TDK -->
+                    <div>
+                        <label for="inputUstadz" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Nama Ustadz / Ustadzah TDK <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="user-check" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="inputUstadz" required placeholder="Otomatis terisi berdasarkan Kelas TDK"
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Pengampu otomatis terisi saat memilih Kelas TDK, namun tetap dapat disesuaikan.</p>
+                    </div>
+
+                    <!-- Pencarian & Pilih Nama Santri -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                            Pencarian & Pilih Nama Santri <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <input type="text" id="santriSearchInput" oninput="filterSantriOptions(this.value)"
+                                placeholder="Ketik nama santri atau kelas regular..."
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+                        </div>
+
+                        <!-- Dropdown Options Box -->
+                        <div id="santriOptionsContainer" class="mt-2 border border-slate-200 rounded-xl bg-white shadow-inner max-h-48 overflow-y-auto custom-scrollbar divide-y divide-slate-100">
+                            <!-- Options rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Santri Card Preview -->
+                    <div id="selectedSantriCard" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+                        <div class="text-xs font-medium text-emerald-800 flex justify-between items-center">
+                            <span>Santri Terpilih:</span>
+                            <span id="selectedSantriTingkat" class="px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold text-[10px]"></span>
+                        </div>
+                        <div id="selectedSantriNama" class="text-sm font-bold text-slate-900"></div>
+                        <div class="text-xs text-slate-600 flex items-center gap-1">
+                            <span>Kelas Regular:</span>
+                            <span id="selectedSantriKelasReg" class="font-semibold text-slate-800"></span>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields for selected santri -->
+                    <input type="hidden" id="selectedSantriId">
+                    <input type="hidden" id="selectedSantriNamaHidden">
+                    <input type="hidden" id="selectedSantriKelasRegHidden">
+                    <input type="hidden" id="selectedSantriTingkatHidden">
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" id="btnSubmitForm" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-emerald-600/20 hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-5 h-5"></i>
+                            <span>Simpan Data Santri TDK</span>
+                        </button>
+                    </div>
+
+                </form>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 2: KOLOM PENCARIAN DATA SANTRI (LG: 7 cols) -->
+            <!-- ========================================== -->
+            <section class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[580px]">
+                
+                <!-- Search Header & Mode Selector -->
+                <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h2 class="font-bold text-base text-slate-900 flex items-center gap-2">
+                                <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
+                                <span>Pencarian Data Santri TDK</span>
+                            </h2>
+                            <p class="text-xs text-slate-500">Pilih metode pencarian di bawah ini</p>
+                        </div>
+                        <div class="text-xs text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">
+                            Total Data TDK: <span id="totalTDKCount" class="font-bold text-emerald-700">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Mode Toggle Tabs (Requirements 3a & 3b) -->
+                    <div class="grid grid-cols-2 p-1 bg-slate-200/80 rounded-xl text-xs font-semibold">
+                        <button type="button" id="tabSearchByKelasTDK" onclick="switchSearchTab('kelasTDK')" 
+                            class="py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all bg-white text-emerald-800 shadow-sm">
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                            <span class="truncate">3a. Cari by Kelas TDK</span>
+                        </button>
+                        <button type="button" id="tabSearchByNama" onclick="switchSearchTab('namaSantri')" 
+                            class="py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all text-slate-600 hover:text-slate-900">
+                            <i data-lucide="user-search" class="w-4 h-4"></i>
+                            <span class="truncate">3b. Cari by Nama</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search Controls Dynamic View -->
+                <div class="p-4 border-b border-slate-100 bg-white">
+                    
+                    <!-- MODE A: SEARCH BY KELAS TDK -->
+                    <div id="searchControlByKelasTDK" class="space-y-2">
+                        <label for="selectFilterKelasTDK" class="block text-xs font-semibold text-slate-700">Pilih Kelas TDK:</label>
+                        <div class="relative">
+                            <i data-lucide="filter" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <select id="selectFilterKelasTDK" onchange="renderSearchResults()" class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none">
+                                <option value="">-- Semua Kelas TDK --</option>
+                                <option value="Kelas TDK Putri 1">Kelas TDK Putri 1 (Ustadzah Alifia Dzikrinnisa)</option>
+                                <option value="Kelas TDK Putri 2">Kelas TDK Putri 2 (Ustadzah Ayu Maulida Ts)</option>
+                                <option value="Kelas TDK Putri 3">Kelas TDK Putri 3 (Ustadzah Ai Syarifah)</option>
+                                <option value="Kelas TDK Putra 1">Kelas TDK Putra 1 (Ustadz Wildan Arifin)</option>
+                                <option value="Kelas TDK Putra 2">Kelas TDK Putra 2 (Ustadz Ahmad Yusuf)</option>
+                                <option value="Kelas TDK Putra 3">Kelas TDK Putra 3 (Ustadz Angga Rizidina)</option>
+                                <option value="Kelas TDK SMA Putra Putri">Kelas TDK SMA Putra Putri (Ustadz M. Mujabun)</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- MODE B: SEARCH BY NAMA SANTRI -->
+                    <div id="searchControlByNama" class="space-y-2 hidden">
+                        <label for="inputFilterNama" class="block text-xs font-semibold text-slate-700">Ketik Nama Santri:</label>
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="inputFilterNama" oninput="renderSearchResults()" placeholder="Ketik nama santri..."
+                                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Search Result Table / List Container -->
+                <div class="flex-grow p-4 overflow-x-auto custom-scrollbar">
+                    
+                    <!-- Table View -->
+                    <table class="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50">
+                                <th class="p-3 rounded-l-lg">No</th>
+                                <th class="p-3">Nama Santri</th>
+                                <th class="p-3">Kelas Regular</th>
+                                <th class="p-3">Kelas TDK</th>
+                                <th class="p-3 rounded-r-lg">Ustadz / Ustadzah TDK</th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchResultsTableBody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+
+                    <!-- Empty State -->
+                    <div id="emptySearchState" class="hidden py-12 text-center text-slate-400 space-y-2">
+                        <i data-lucide="folder-search" class="w-12 h-12 mx-auto stroke-1 text-slate-300"></i>
+                        <p class="text-sm font-medium">Belum ada data santri TDK</p>
+                        <p class="text-xs text-slate-400">Data akan muncul setelah diinput secara manual oleh guru atau disinkronkan dari Google Sheets.</p>
+                    </div>
+
+                </div>
+
+                <!-- Footer Summary inside Search Section -->
+                <div class="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center">
+                    <span id="searchResultSummary">Menampilkan 0 data</span>
+                    <button onclick="exportToCSV()" class="text-emerald-700 hover:text-emerald-800 font-medium flex items-center gap-1 hover:underline">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+                    </button>
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+    <div id="backendGuideModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-emerald-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="file-code" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="font-bold text-sm">Panduan & Kode Google Apps Script</h3>
+                </div>
+                <button onclick="toggleBackendGuideModal()" class="text-emerald-200 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs text-slate-600">
+                <p>
+                    Untuk menghubungkan form ini secara langsung ke Google Sheets Anda, silakan ikuti langkah-langkah berikut:
+                </p>
+                <ol class="list-decimal pl-4 space-y-1.5 font-medium text-slate-700">
+                    <li>Buka Spreadsheet Google Sheets Anda.</li>
+                    <li>Klik menu <span class="bg-slate-100 px-1 py-0.5 border rounded">Ekstensi</span> &rarr; <span class="bg-slate-100 px-1 py-0.5 border rounded">Apps Script</span>.</li>
+                    <li>Hapus kode bawaan, lalu **Copy & Paste** kode Apps Script di bawah ini:</li>
+                </ol>
+
+                <div class="relative">
+                    <pre class="bg-slate-900 text-emerald-400 p-3 rounded-xl overflow-x-auto text-[11px] font-mono select-all">
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  var result = [];
+  
+  for (var i = 1; i < data.length; i++) {
+    result.push({
+      timestamp: data[i][0],
+      kelasTDK: data[i][1],
+      ustadz: data[i][2],
+      namaSantri: data[i][3],
+      kelasReg: data[i][4],
+      tingkat: data[i][5]
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", data: result }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Timestamp", "Kelas TDK", "Nama Ustadz / Ustadzah", "Nama Santri", "Kelas Regular", "Tingkat"]);
+    }
+    
+    var param = JSON.parse(e.postData.contents);
+    sheet.appendRow([
+      new Date(),
+      param.kelasTDK,
+      param.ustadz,
+      param.namaSantri,
+      param.kelasReg,
+      param.tingkat
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data berhasil disimpan!" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+                </div>
+
+                <ol start="4" class="list-decimal pl-4 space-y-1.5 font-medium text-slate-700">
+                    <li>Klik <span class="bg-slate-100 px-1 py-0.5 border rounded">Apply/Deploy</span> &rarr; <span class="bg-slate-100 px-1 py-0.5 border rounded">New Deployment</span>.</li>
+                    <li>Pilih jenis <span class="bg-slate-100 px-1 py-0.5 border rounded">Web App</span>, set **Who has access** ke **"Anyone" (Siapa Saja)**.</li>
+                    <li>Salin URL Web App yang dihasilkan, lalu ganti nilai variabel <code class="bg-emerald-50 text-emerald-700 px-1 font-mono">GOOGLE_SHEET_WEB_APP_URL</code> di dalam kode JavaScript file ini.</li>
+                </ol>
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="toggleBackendGuideModal()" class="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl text-xs hover:bg-slate-900">
+                    Tutup Panduan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div id="toastBody" class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center gap-3 text-xs font-medium">
+            <i id="toastIcon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+            <span id="toastMessage">Pesan Notifikasi</span>
+        </div>
+    </div>
+
+    <script>
+        /* 
+         * =========================================================================
+         * MANUALLY INPUT YOUR GOOGLE SHEETS WEB APP URL HERE:
+         * Replace with your Google Apps Script Web App URL!
+         * =========================================================================
+         */
+        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwgYfxqRT7kzdgPJX70BGQV3sB2Inf3apIr7ZGfSrgHLG--vzGYyCsz4HFRHncDb3YA/exec"
+
+        const PRESET_USTADZ_MAP = {
+            "Kelas TDK Putri 1": "Alifia Dzikrinnisa",
+            "Kelas TDK Putri 2": "Ayu Maulida Ts",
+            "Kelas TDK Putri 3": "Ai Syarifah",
+            "Kelas TDK Putra 1": "Wildan Arifin",
+            "Kelas TDK Putra 2": "Ahmad Yusuf",
+            "Kelas TDK Putra 3": "Angga Rizidina",
+            "Kelas TDK SMA Putra Putri": "M. Mujabun"
+        };
+
+        /*
+         * MASTER SANTRI LIST (Daftar Santri Kelas Regular SMP & SMA Plus Al-Aqsha TA 2026-2027)
+         */
+        const MASTER_SANTRI_LIST = [
+            // SMA PLUS AL-AQSHA REGULAR CLASSES
+            { id: "SMA-001", nama: "Ahmad Zaki Mubarak", kelasReg: "10-IPA 1", tingkat: "SMA" },
+            { id: "SMA-002", nama: "Aisyah Nabila Putri", kelasReg: "10-IPA 1", tingkat: "SMA" },
+            { id: "SMA-003", nama: "Ali Farhan Syahputra", kelasReg: "10-IPA 2", tingkat: "SMA" },
+            { id: "SMA-004", nama: "Anisa Rahmawati", kelasReg: "10-IPS 1", tingkat: "SMA" },
+            { id: "SMA-005", nama: "Bilal Hidayatullah", kelasReg: "10-IPS 2", tingkat: "SMA" },
+            { id: "SMA-006", nama: "Fatimah Az-Zahra", kelasReg: "11-IPA 1", tingkat: "SMA" },
+            { id: "SMA-007", nama: "Fikri Ramadhan", kelasReg: "11-IPA 1", tingkat: "SMA" },
+            { id: "SMA-008", nama: "Hasan Basri", kelasReg: "11-IPA 2", tingkat: "SMA" },
+            { id: "SMA-009", nama: "Khadijah Nurul Aini", kelasReg: "11-IPS 1", tingkat: "SMA" },
+            { id: "SMA-010", nama: "Muhammad Faiz Rabbani", kelasReg: "12-IPA 1", tingkat: "SMA" },
+            { id: "SMA-011", nama: "Muhammad Rayhan Al-Fatih", kelasReg: "12-IPA 1", tingkat: "SMA" },
+            { id: "SMA-012", nama: "Nafisa Azzahra", kelasReg: "12-IPA 2", tingkat: "SMA" },
+            { id: "SMA-013", nama: "Rahmat Hidayat", kelasReg: "12-IPS 1", tingkat: "SMA" },
+            { id: "SMA-014", nama: "Siti Sarah Nurhaliza", kelasReg: "12-IPS 2", tingkat: "SMA" },
+
+            // SMP PLUS AL-AQSHA REGULAR CLASSES
+            { id: "SMP-001", nama: "Abdullah Ar-Rasyid", kelasReg: "VII-A", tingkat: "SMP" },
+            { id: "SMP-002", nama: "Aditya Pratama", kelasReg: "VII-A", tingkat: "SMP" },
+            { id: "SMP-003", nama: "Aqila Zalfa Humaira", kelasReg: "VII-B", tingkat: "SMP" },
+            { id: "SMP-004", nama: "Daffa Ibnu Hafiz", kelasReg: "VII-B", tingkat: "SMP" },
+            { id: "SMP-005", nama: "Farah Syakira", kelasReg: "VIII-A", tingkat: "SMP" },
+            { id: "SMP-006", nama: "Ibrahim Maulana", kelasReg: "VIII-A", tingkat: "SMP" },
+            { id: "SMP-007", nama: "Keyla Putri Utami", kelasReg: "VIII-B", tingkat: "SMP" },
+            { id: "SMP-008", nama: "Luqman Hakim", kelasReg: "VIII-B", tingkat: "SMP" },
+            { id: "SMP-009", nama: "Naufal Hamzah", kelasReg: "IX-A", tingkat: "SMP" },
+            { id: "SMP-010", nama: "Nurul Izzah", kelasReg: "IX-A", tingkat: "SMP" },
+            { id: "SMP-011", nama: "Sultan Aulia", kelasReg: "IX-B", tingkat: "SMP" },
+            { id: "SMP-012", nama: "Zahra Salsabila", kelasReg: "IX-B", tingkat: "SMP" }
+        ];
+
+        /*
+         * Database Santri TDK - Diawali kosong tanpa data contoh
+         * Data hanya akan bertambah saat guru melakukan input manual atau sinkronisasi dengan Google Sheets
+         */
+        let tdkDatabase = [];
+
+        let activeSearchTab = 'kelasTDK'; // 'kelasTDK' or 'namaSantri'
+
+        window.onload = function() {
+            lucide.createIcons();
+            checkUrlConfiguration();
+            renderSantriOptions();
+            renderSearchResults();
+        };
+
+        function checkUrlConfiguration() {
+            const badge = document.getElementById('connectionStatusBadge');
+            const statusText = document.getElementById('connectionStatusText');
+            
+            if (GOOGLE_SHEET_WEB_APP_URL && !GOOGLE_SHEET_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
+                badge.className = "flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-200 rounded-lg text-xs font-medium border border-emerald-400/30";
+                statusText.innerText = "Spreadsheet: Terhubung (URL Configured)";
+                fetchSheetData();
+            } else {
+                badge.className = "flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 text-amber-200 rounded-lg text-xs font-medium border border-amber-400/30";
+                statusText.innerText = "Spreadsheet: Mode Lokal / Demo";
+            }
+        }
+
+        function autoFillUstadz(kelasTDKValue) {
+            const ustadzInput = document.getElementById('inputUstadz');
+            if (PRESET_USTADZ_MAP[kelasTDKValue]) {
+                ustadzInput.value = PRESET_USTADZ_MAP[kelasTDKValue];
+            }
+        }
+
+        function renderSantriOptions(searchTerm = "") {
+            const container = document.getElementById('santriOptionsContainer');
+            const term = searchTerm.toLowerCase().trim();
+
+            const filtered = MASTER_SANTRI_LIST.filter(s => 
+                s.nama.toLowerCase().includes(term) || 
+                s.kelasReg.toLowerCase().includes(term) ||
+                s.tingkat.toLowerCase().includes(term)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-3 text-center text-slate-400 text-xs">
+                        Tidak ada santri yang ditemukan
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(santri => `
+                <div onclick="selectSantri('${santri.id}')" class="p-2.5 hover:bg-emerald-50/80 cursor-pointer transition-colors flex items-center justify-between group">
+                    <div>
+                        <div class="text-xs font-semibold text-slate-800 group-hover:text-emerald-800">${santri.nama}</div>
+                        <div class="text-[11px] text-slate-500">Kelas Regular: ${santri.kelasReg}</div>
+                    </div>
+                    <span class="text-[10px] font-medium px-2 py-0.5 rounded ${santri.tingkat === 'SMA' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'}">
+                        ${santri.tingkat}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function filterSantriOptions(value) {
+            renderSantriOptions(value);
+        }
+
+        function selectSantri(id) {
+            const santri = MASTER_SANTRI_LIST.find(s => s.id === id);
+            if (!santri) return;
+
+            document.getElementById('selectedSantriId').value = santri.id;
+            document.getElementById('selectedSantriNamaHidden').value = santri.nama;
+            document.getElementById('selectedSantriKelasRegHidden').value = santri.kelasReg;
+            document.getElementById('selectedSantriTingkatHidden').value = santri.tingkat;
+
+            document.getElementById('selectedSantriNama').innerText = santri.nama;
+            document.getElementById('selectedSantriKelasReg').innerText = santri.kelasReg;
+            document.getElementById('selectedSantriTingkat').innerText = santri.tingkat;
+
+            document.getElementById('selectedSantriCard').classList.remove('hidden');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const kelasTDK = document.getElementById('inputKelasTDK').value;
+            const ustadz = document.getElementById('inputUstadz').value.trim();
+            const santriNama = document.getElementById('selectedSantriNamaHidden').value;
+            const santriKelasReg = document.getElementById('selectedSantriKelasRegHidden').value;
+            const santriTingkat = document.getElementById('selectedSantriTingkatHidden').value;
+
+            if (!kelasTDK) {
+                showToast("Pilih Kelas TDK terlebih dahulu!", "error");
+                return;
+            }
+
+            if (!santriNama) {
+                showToast("Pilih salah satu nama santri dari daftar terlebih dahulu!", "error");
+                return;
+            }
+
+            const newEntry = {
+                kelasTDK: kelasTDK,
+                ustadz: ustadz,
+                namaSantri: santriNama,
+                kelasReg: santriKelasReg,
+                tingkat: santriTingkat
+            };
+
+            // Local state update
+            tdkDatabase.unshift(newEntry);
+            renderSearchResults();
+
+            // Clear selected santri preview
+            document.getElementById('selectedSantriCard').classList.add('hidden');
+            document.getElementById('selectedSantriId').value = "";
+            document.getElementById('selectedSantriNamaHidden').value = "";
+            document.getElementById('santriSearchInput').value = "";
+            renderSantriOptions();
+
+            showToast(`Data ${santriNama} berhasil ditambahkan ke ${kelasTDK}!`, "success");
+
+            // Send to Google Sheets if Web App URL configured
+            if (GOOGLE_SHEET_WEB_APP_URL && !GOOGLE_SHEET_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
+                const btn = document.getElementById('btnSubmitForm');
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan ke Sheet...`;
+
+                try {
+                    await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newEntry)
+                    });
+                    showToast("Tersimpan ke Google Sheets!", "success");
+                } catch (error) {
+                    console.error("Gagal mengirim ke Google Sheets:", error);
+                    showToast("Tersimpan di tampilan lokal. Cek Apps Script URL.", "warning");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function switchSearchTab(mode) {
+            activeSearchTab = mode;
+            const btnKelas = document.getElementById('tabSearchByKelasTDK');
+            const btnNama = document.getElementById('tabSearchByNama');
+            const ctrlKelas = document.getElementById('searchControlByKelasTDK');
+            const ctrlNama = document.getElementById('searchControlByNama');
+
+            if (mode === 'kelasTDK') {
+                btnKelas.className = "py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all bg-white text-emerald-800 shadow-sm";
+                btnNama.className = "py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all text-slate-600 hover:text-slate-900";
+                ctrlKelas.classList.remove('hidden');
+                ctrlNama.classList.add('hidden');
+            } else {
+                btnNama.className = "py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all bg-white text-emerald-800 shadow-sm";
+                btnKelas.className = "py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all text-slate-600 hover:text-slate-900";
+                ctrlNama.classList.remove('hidden');
+                ctrlKelas.classList.add('hidden');
+            }
+
+            renderSearchResults();
+        }
+
+        function renderSearchResults() {
+            const tbody = document.getElementById('searchResultsTableBody');
+            const emptyState = document.getElementById('emptySearchState');
+            const summaryText = document.getElementById('searchResultSummary');
+            const totalCountBadge = document.getElementById('totalTDKCount');
+
+            totalCountBadge.innerText = tdkDatabase.length;
+
+            let displayList = [];
+
+            if (activeSearchTab === 'kelasTDK') {
+                // Requirement 3a: Pencarian by kelas TDK -> Menampilkan daftar nama santri di kelas TDK tersebut
+                const selectedKelas = document.getElementById('selectFilterKelasTDK').value;
+                if (selectedKelas) {
+                    displayList = tdkDatabase.filter(item => item.kelasTDK === selectedKelas);
+                } else {
+                    displayList = [...tdkDatabase];
+                }
+            } else {
+                // Requirement 3b: Pencarian by Nama -> Menampilkan Nama santri, kelas regular, dan kelas TDK
+                const nameQuery = document.getElementById('inputFilterNama').value.toLowerCase().trim();
+                
+                if (nameQuery) {
+                    // Match against TDK database entries
+                    displayList = tdkDatabase.filter(item => item.namaSantri.toLowerCase().includes(nameQuery));
+
+                    // Also check master santri list who aren't yet in TDK database
+                    if (displayList.length === 0) {
+                        const masterMatches = MASTER_SANTRI_LIST.filter(s => s.nama.toLowerCase().includes(nameQuery));
+                        displayList = masterMatches.map(m => ({
+                            namaSantri: m.nama,
+                            kelasReg: m.kelasReg,
+                            tingkat: m.tingkat,
+                            kelasTDK: "Belum Terdaftar TDK",
+                            ustadz: "-"
+                        }));
+                    }
+                } else {
+                    displayList = [...tdkDatabase];
+                }
+            }
+
+            summaryText.innerText = `Menampilkan ${displayList.length} data santri`;
+
+            if (displayList.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = displayList.map((item, index) => {
+                const isAssigned = item.kelasTDK !== "Belum Terdaftar TDK";
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3 font-medium text-slate-400">${index + 1}</td>
+                        <td class="p-3 font-semibold text-slate-900">
+                            ${item.namaSantri}
+                            <span class="inline-block sm:hidden text-[10px] text-slate-400 font-normal block">${item.tingkat} - ${item.kelasReg}</span>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-medium text-[11px]">
+                                ${item.kelasReg}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded-lg text-[11px] font-semibold ${isAssigned ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                                ${item.kelasTDK}
+                            </span>
+                        </td>
+                        <td class="p-3 text-slate-700 font-medium">${item.ustadz}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function fetchSheetData() {
+            if (!GOOGLE_SHEET_WEB_APP_URL || GOOGLE_SHEET_WEB_APP_URL.includes("YOUR_DEPLOYMENT_ID")) {
+                showToast("Mode Demo: Masukkan GOOGLE_SHEET_WEB_APP_URL di dalam kode HTML.", "info");
+                return;
+            }
+
+            try {
+                showToast("Memuat data dari Google Sheets...", "info");
+                const res = await fetch(GOOGLE_SHEET_WEB_APP_URL);
+                const json = await res.json();
+                if (json.status === "success" && Array.isArray(json.data)) {
+                    tdkDatabase = json.data;
+                    renderSearchResults();
+                    showToast("Data terbaru berhasil disinkronkan!", "success");
+                }
+            } catch (err) {
+                console.error("Gagal sinkron data:", err);
+                showToast("Gagal memuat data dari Spreadsheet.", "error");
+            }
+        }
+
+        function toggleBackendGuideModal() {
+            const modal = document.getElementById('backendGuideModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function showToast(message, type = "info") {
+            const toast = document.getElementById('toastNotification');
+            const toastBody = document.getElementById('toastBody');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.innerText = message;
+
+            if (type === "success") {
+                toastBody.className = "bg-emerald-900 text-white px-4 py-3 rounded-xl shadow-xl border border-emerald-700 flex items-center gap-3 text-xs font-medium";
+                toastIcon.setAttribute('data-lucide', 'check-circle-2');
+                toastIcon.className = "w-5 h-5 text-emerald-400 shrink-0";
+            } else if (type === "error") {
+                toastBody.className = "bg-rose-900 text-white px-4 py-3 rounded-xl shadow-xl border border-rose-700 flex items-center gap-3 text-xs font-medium";
+                toastIcon.setAttribute('data-lucide', 'alert-circle');
+                toastIcon.className = "w-5 h-5 text-rose-400 shrink-0";
+            } else {
+                toastBody.className = "bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center gap-3 text-xs font-medium";
+                toastIcon.setAttribute('data-lucide', 'info');
+                toastIcon.className = "w-5 h-5 text-sky-400 shrink-0";
+            }
+
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3500);
+        }
+
+        function exportToCSV() {
+            if (tdkDatabase.length === 0) {
+                showToast("Tidak ada data untuk diexport", "error");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "No,Kelas TDK,Nama Ustadz TDK,Nama Santri,Kelas Regular,Tingkat\n";
+
+            tdkDatabase.forEach((row, i) => {
+                csvContent += `${i + 1},"${row.kelasTDK}","${row.ustadz}","${row.namaSantri}","${row.kelasReg}","${row.tingkat}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Data_Santri_TDK_AlAqsha_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("File CSV berhasil diunduh!", "success");
+        }
+    </script>
+</body>
+</html>
